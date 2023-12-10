@@ -48,6 +48,10 @@ public class CString : IDisposable
 
     bool beDisposed = false;    
 
+    //通过using的使用，提供接口记录所有的CString，便于在出了scope后调用dispose，清理所有cstring
+    //支持嵌套使用， 通过一个static变量来记录当前的current block，通过一个stack来记录所有嵌套历史
+    //使用时通过一个queue结构来作为pool
+    //不支持多线程， 修改的话需要私用cocurrentstack， cocurrentqueue， 然后currentblock需要使用dict<thread id, current block>映射起来
     internal class CStringBlock : IStringBlock
     {
         List<CString> list;
