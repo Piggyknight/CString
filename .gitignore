@@ -33,4 +33,6 @@ sysinfo.txt
 /CString/obj/
 /UnitTest/obj/
 /UnitTest/.idea/
-/UnitTest/Logs
+/UnitTest/Logs/
+/UnitTest/_ReSharper.Caches/
+/UnitTest/Temp/

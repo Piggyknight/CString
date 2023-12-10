@@ -3,172 +3,178 @@ using UnityEngine;
 
 public static class SocString
 {
-        //! Concatenate a formatted string with arguments
-	public static string Format<A>(String format_string, A arg1)
-        where A : IConvertible
+    public static CString Format<TA>(string InFormatStr, TA arg1)
+        where TA : IConvertible
     {
-		//return string_builder.ConcatFormat<A, int, int, int>( format_string, arg1, 0, 0, 0 );
-        return String.Empty;
+		return Format<TA, int, int, int>( InFormatStr, arg1, 0, 0, 0, 1);
     }
 
-	//! Concatenate a formatted string with arguments
-	public static string Format<A, B>(String format_string, A arg1, B arg2 )
-        where A : IConvertible
-        where B : IConvertible
+	public static CString Format<TA, TB>(string InFormatStr, TA arg1, TB arg2 )
+        where TA : IConvertible
+        where TB : IConvertible
     {
-		//return string_builder.ConcatFormat<A, B, int, int>( format_string, arg1, arg2, 0, 0 );
-        return String.Empty;
+        return Format<TA, TB, int, int>(InFormatStr, arg1, arg2, 0, 0, 2);
     }
 
-	//! Concatenate a formatted string with arguments
-	public static string Format<A, B, C>( this CString str, String format_string, A arg1, B arg2, C arg3 )
-        where A : IConvertible
-        where B : IConvertible
-        where C : IConvertible
+	public static CString Format<TA, TB, TC>(string InFormatStr, TA arg1, TB arg2, TC arg3 )
+        where TA : IConvertible
+        where TB : IConvertible
+        where TC : IConvertible
     {
-		//return string_builder.ConcatFormat<A, B, C, int>( format_string, arg1, arg2, arg3, 0 );
-        return String.Empty;
+		return Format<TA, TB, TC, int>( InFormatStr, arg1, arg2, arg3, 0,3);
+    }
+    
+    public static CString Format<TA, TB, TC, TD>(string InFormatStr, TA arg1, TB arg2, TC arg3, TD arg4)
+        where TA : IConvertible
+        where TB : IConvertible
+        where TC : IConvertible
+        where TD : IConvertible
+    {
+        return Format<TA, TB, TC, TD>( InFormatStr, arg1, arg2, arg3, arg4,4);
     }
 
-	//! Concatenate a formatted string with arguments
-    public static string Format<A,B,C,D>(String format_string, A arg1, B arg2, C arg3, D arg4 )
-        where A : IConvertible
-        where B : IConvertible
-        where C : IConvertible
-        where D : IConvertible
-    {
-		int verbatim_range_start = 0;
 
-		for ( int index = 0; index < format_string.Length; index++ )
+	//! Concatenate a formatted string with arguments
+    public static CString Format<TA,TB,TC,TD>(string InFormatStr, TA arg1, TB arg2, TC arg3, TD arg4, int InArgCount)
+        where TA : IConvertible
+        where TB : IConvertible
+        where TC : IConvertible
+        where TD : IConvertible
+    {
+        using (CString.Block())
         {
-			if ( format_string[index] == '{' )
+            CString sb = CString.Alloc(InFormatStr.Length + 256);
+            
+            int verbatim_range_start = 0;
+
+		    for ( int index = 0; index < InFormatStr.Length; index++ )
             {
-				// Formatting bit now, so make sure the last block of the string is written out verbatim.
-				if ( verbatim_range_start < index )
-				{
-					// Write out unformatted string portion
-					//string_builder.Append( format_string, verbatim_range_start, index - verbatim_range_start );
-				}
-
-                uint base_value = 10;
-                uint padding = 0;
-                uint decimal_places = 5; // Default decimal places in .NET libs
-
-                index++;
-                char format_char = format_string[index];
-                if ( format_char == '{' )
+			    if ( InFormatStr[index] == '{' )
                 {
-                    //string_builder.Append( '{' );
+				    // Formatting bit now, so make sure the last block of the string is written out verbatim.
+				    if ( verbatim_range_start < index )
+				    {
+					    // Write out unformatted string portion
+                        sb.Append(InFormatStr, verbatim_range_start, index - verbatim_range_start);
+				    }
+
+                    uint base_value = 10;
+                    uint padding = 0;
+                    uint decimal_places = 5; // Default decimal places in .NET libs
+
                     index++;
-                }
-                else
-                {
-                    index++;
-
-                    if ( format_string[index] == ':' )
+                    char format_char = InFormatStr[index];
+                    if ( format_char == '{' )
                     {
-                        // Extra formatting. This is a crude first pass proof-of-concept. It's not meant to cover
-                        // comprehensively what the .NET standard library Format() can do.
-                        index++;
-
-                        // Deal with padding
-                        while ( format_string[index] == '0' )
-                        {
-                            index++;
-                            padding++;
-                        }
-                        
-                        if ( format_string[index] == 'X' )
-                        {
-                            index++;
-
-                            // Print in hex
-                            base_value = 16;
-
-                            // Specify amount of padding ( "{0:X8}" for example pads hex to eight characters
-                            if ( ( format_string[index] >= '0' ) && ( format_string[index] <= '9' ) )
-                            {
-                                padding = (uint)( format_string[index] - '0' );
-                                index++;
-                            }
-                        }
-                        else if ( format_string[index] == '.' )
-                        {
-                            index++;
-
-                            // Specify number of decimal places
-                            decimal_places = 0;
-
-                            while ( format_string[index] == '0' )
-                            {
-                                index++;
-                                decimal_places++;
-                            }
-                        }        
-                    }
-                   
-
-                    // Scan through to end bracket
-                    while ( format_string[index] != '}' )
-                    {
+                        sb.Append('{');
                         index++;
                     }
-
-                    // Have any extended settings now, so just print out the particular argument they wanted
-                    switch ( format_char )
+                    else
                     {
-                        case '0': FormatValue<A>( arg1, padding, base_value, decimal_places ); break;
-                        case '1': FormatValue<B>( arg2, padding, base_value, decimal_places ); break;
-                        case '2': FormatValue<C>( arg3, padding, base_value, decimal_places ); break;
-                        case '3': FormatValue<D>( arg4, padding, base_value, decimal_places ); break;
-                        default:
-                            Debug.Assert(false, "Invalid parameter index"); break;
+                        index++;
+
+                        if ( InFormatStr[index] == ':' )
+                        {
+                            // Extra formatting. This is a crude first pass proof-of-concept. It's not meant to cover
+                            // comprehensively what the .NET standard library Format() can do.
+                            index++;
+
+                            // Deal with padding
+                            while ( InFormatStr[index] == '0' )
+                            {
+                                index++;
+                                padding++;
+                            }
+                            
+                            if ( InFormatStr[index] == 'X' )
+                            {
+                                index++;
+
+                                // Print in hex
+                                base_value = 16;
+
+                                // Specify amount of padding ( "{0:X8}" for example pads hex to eight characters
+                                if ( ( InFormatStr[index] >= '0' ) && ( InFormatStr[index] <= '9' ) )
+                                {
+                                    padding = (uint)( InFormatStr[index] - '0' );
+                                    index++;
+                                }
+                            }
+                            else if ( InFormatStr[index] == '.' )
+                            {
+                                index++;
+
+                                // Specify number of decimal places
+                                decimal_places = 0;
+
+                                while ( InFormatStr[index] == '0' )
+                                {
+                                    index++;
+                                    decimal_places++;
+                                }
+                            }        
+                        }
+                       
+
+                        // Scan through to end bracket
+                        while ( InFormatStr[index] != '}' )
+                        {
+                            index++;
+                        }
+
+                        // Have any extended settings now, so just print out the particular argument they wanted
+                        switch ( format_char )
+                        {
+                            case '0': sb.FormatValue<TA>( arg1, padding, base_value, decimal_places ); break;
+                            case '1': sb.FormatValue<TB>( arg2, padding, base_value, decimal_places ); break;
+                            case '2': sb.FormatValue<TC>( arg3, padding, base_value, decimal_places ); break;
+                            case '3': sb.FormatValue<TD>( arg4, padding, base_value, decimal_places ); break;
+                            default:
+                                Debug.Assert(false, "Invalid parameter index"); break;
+                        }
                     }
+
+				    // Update the verbatim range, start of a new section now
+				    verbatim_range_start = ( index + 1 );
                 }
+		    }
 
-				// Update the verbatim range, start of a new section now
-				verbatim_range_start = ( index + 1 );
-            }
-		}
+		    // Anything verbatim to write out?
+		    if ( verbatim_range_start < InFormatStr.Length )
+		    {
+			    // Write out unformatted string portion
+                sb.Append(InFormatStr, verbatim_range_start, InFormatStr.Length - verbatim_range_start);
+		    }
 
-		// Anything verbatim to write out?
-		//if ( verbatim_range_start < format_string.Length )
-		{
-			// Write out unformatted string portion
-		//	string_builder.Append( format_string, verbatim_range_start, format_string.Length - verbatim_range_start );
-		}
-
-        //return string_builder;
-        return String.Empty;
+            return sb;
+        }
     }        
     
-    private static void FormatValue<T>(T arg, uint padding, uint base_value, uint decimal_places ) where T : IConvertible
+    private static void FormatValue<T>(this CString InSb, T arg, uint padding, uint base_value, uint decimal_places ) where T : IConvertible
     {
-        CString string_builder = CString.Alloc( 32 );
-        
         switch ( arg.GetTypeCode() )
         {
             case System.TypeCode.UInt32:
             {
-                string_builder.Append( arg.ToUInt32( System.Globalization.NumberFormatInfo.CurrentInfo));
+                InSb.Append( arg.ToUInt32( System.Globalization.NumberFormatInfo.CurrentInfo));
                 break;
             }
 
             case System.TypeCode.Int32:
             {
-                string_builder.Append( arg.ToInt32( System.Globalization.NumberFormatInfo.CurrentInfo));
+                InSb.Append( arg.ToInt32( System.Globalization.NumberFormatInfo.CurrentInfo));
                 break;
             }
 
             case System.TypeCode.Single:
             {
-                string_builder.Append( arg.ToSingle( System.Globalization.NumberFormatInfo.CurrentInfo));
+                InSb.Append( arg.ToSingle( System.Globalization.NumberFormatInfo.CurrentInfo));
                 break;
             }
 
             case System.TypeCode.String:
             {
-                string_builder.Append( Convert.ToString( arg ) );
+                InSb.Append( Convert.ToString( arg ) );
                 break;
             }
 

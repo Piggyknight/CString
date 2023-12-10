@@ -42,9 +42,9 @@ public class CString : IDisposable
     static string NewLine = Environment.NewLine;
 
     [NonSerialized]
-    char[] _buffer;
+    public char[] _buffer;
     [NonSerialized]
-    int length = 0;
+    public int length = 0;
 
     bool beDisposed = false;    
 
